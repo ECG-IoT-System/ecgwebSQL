@@ -1,0 +1,31 @@
+
+
+.bar {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	background-color: #333;
+}
+
+.bar2 {
+	float: left;
+}
+
+.bar2 a {
+	display: block;
+	color: white;
+	text-align: center;
+	padding: 15px 17px;
+	text-decoration: none;
+	font-size: 100%;
+}
+
+.bar2 a:hover:not (.active ) {
+	background-color: #111;
+}
+
+.active {
+	background-color: #4CAF50;
+}
+

@@ -1,0 +1,39 @@
+runtime: python27
+service : ecgweb2
+api_version : 1
+threadsafe: yes
+
+
+handlers:
+
+- url: /(.+)
+  static_files: website/\1
+  upload: website/(.*)
+  
+  
+- url: /
+  static_files: website/index.html
+  upload: website/index.html
+
+
+skip_files:
+- ^(.*/)?app\.yaml
+- ^(.*/)?app\.yml
+- ^(.*/)?#.*#
+- ^(.*/)?.*~
+- ^(.*/)?.*\.py[co]
+- ^(.*/)?.*/RCS/.*
+- ^(.*/)?\..*
+- ^(.*/)?tests$
+- ^(.*/)?test$
+- ^test/(.*/)?
+- ^COPYING.LESSER
+- ^README\..*
+- \.gitignore
+- ^\.git/.*
+- \.*\.lint$
+- ^fabfile\.py
+- ^testrunner\.py
+- ^grunt\.js
+- ^node_modules/(.*/)?
+

@@ -1,0 +1,319 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
+    <script type="text/javascript" src="js/flot/jshashtable-2.1.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.numberformatter-1.2.3.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.symbol.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.axislabels.js"></script>
+    <script type="text/javascript" src="js/math/math.js"></script>
+    <script type="text/javascript" src="js/jquery.ba-hashchange.js"></script>
+
+
+    <link rel="stylesheet" type='text/css' media='all' href="css/control.css">
+
+    <!-- change the size of Charts -->
+</head>
+
+<body>
+    <ul>
+        <li class="bar2"><a href="index.html">Home</a></li>
+        <li class="bar2"><a href="demo3lead.html">Wireless 3-lead ECG </a></li>
+        <li class="bar2"><a href="demo12lead.html">Synthesized 12-lead ECG </a></li>
+        <li class="bar2"><a class="active" href="control.html"> Control Page</a></li>
+    </ul>
+
+    <button class="button" id="showTable">Show Table</button>
+
+
+
+
+    <div id="tablediv">
+        <table class="infotable" cellspacing="0" id="skinfotable">
+            <tr>
+
+                <th scope="col">id</th>
+                <th scope="col">user</th>
+                <th scope="col">lasttime</th>
+                <th scope="col">status</th>
+                <th scope="col">&nbsp;</th>
+            </tr>
+        </table>
+    </div>
+
+
+    <div id="user">
+        Username:
+        <input type="text" name="username">
+    </div>
+
+    <button class="button" id="userButtonSubmit">Append User</button>
+
+    <p id="macmappingTxt"> Mac mapping </p>
+
+
+    <ol id="list">
+        <div id="ff">
+
+        </div>
+    </ol>
+
+
+    <br>
+
+
+    <div id="user_mac">
+        Mac address :
+        <input type="text" name="mac_address">
+        <br>
+        Device id ( 1 , 2 , 3 ) :
+        <input type="text" name="deviceId">
+    </div>
+
+    <button class="button" id="macAddressAppend">Append mac address and device ID of the selected user ID </button>
+
+
+    <script type="text/javascript">
+        var skinfoArray = new Array();
+        //var macArray = new Array();
+        var searchUserID = "";
+
+        $(function() {
+
+            // Bind the event.
+            $(window).hashchange(hashchanged);
+
+            // Trigger the event (useful on page load).
+            hashchanged();
+
+        });
+
+        function hashchanged() {
+            var hashAnchor = location.hash.replace(/^#/, '');
+            console.log(hashAnchor)
+            //document.getElementsByName('macid_username')[0].value = hashAnchor;
+            if(hashAnchor){
+            searchUserID = hashAnchor;
+            searchMACbyUserIDAction(searchUserID);
+            $("#macmappingTxt").text("Mac mapping : " +searchUserID );
+            }
+            else{
+                searchUserID = "";
+                 $("#macmappingTxt").text("Mac mapping : ");
+                
+            }
+            
+        }
+
+        
+
+        $(document).ready(function() {
+            //$("#tablediv").hide();
+            $(requestInfo);
+            
+
+        });
+
+        function searchMACbyUserIDAction(searchUserID) {
+             //var userID = document.getElementsByName('macid_username')[0].value
+        //    console.log(userID);
+            $.ajax({
+                type: 'GET',
+                //url: "https://0b959718.ngrok.io/user/" + jobValue + "/macs",
+                // url : "https://node-server-dot-ecgproject-1069.appspot.com/user/5bffc3e8148992777f733361/macs",
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/" + searchUserID + "/macs",
+                dataType: "json",
+                success: function(response) {
+                    console.log("success");
+                    console.log(response);
+
+                    $("#ff").empty();
+//                    macArray.length = 0;
+
+                    if (response.length > 0) {
+                        response.sort(function(a, b) {
+                            return a.device_id - b.device_id;
+                        });
+                        for (var i = 0; i < response.length; i++) {
+                            console.log("<li>" + response[i].device_id + " : " + response[i].mac + "</li>")
+                            var appendText = "<li>  device_id : " + response[i].device_id + " : " + response[i].mac + " : " + response[i].status + " </li>";
+                            $("#ff").append(appendText);
+                        }
+
+                    } else {
+                        $("#ff").append("<li> Empty </li>");
+                    }
+
+                },
+                error: function(msg) {
+                    console.log("Fail")
+                    console.log(msg);
+                }
+            });
+        
+        }
+        
+        $("#macAddressAppend").click(function() {
+            
+            var mac_address = document.getElementsByName('mac_address')[0].value
+            var deviceId = document.getElementsByName('deviceId')[0].value
+
+
+            $.ajax({
+                type: 'POST',
+                //url: "https://0b959718.ngrok.io/registration",
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/" + searchUserID + "/macs",
+                data: {
+                    "user_id": searchUserID.toString(),
+                    "mac": mac_address,
+                    "device_id": deviceId,
+
+                },
+                dataType: "json",
+                success: function(response) {
+                    console.log("success");
+                    console.log(response);
+                    if (response.id) {
+//                        skinfoArray.push([response.id,
+//                            jobValue,
+//                            null,
+//                            false
+//                        ]);
+
+                    }
+                    searchMACbyUserIDAction(searchUserID)
+
+                },
+                error: function(msg) {
+                    console.log("Fail")
+                    console.log(msg);
+                }
+            });
+        });
+
+
+
+
+
+
+        $("#userButtonSubmit").click(function() {
+
+            var userName = document.getElementsByName('username')[0].value
+
+            console.log(userName);
+            $.ajax({
+                type: 'POST',
+                //url: "https://0b959718.ngrok.io/registration",
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users",
+                data: {
+                    "username": userName
+                },
+                dataType: "json",
+                success: function(response) {
+                    console.log("success");
+                    console.log(response);
+                    if (response.id) {
+                        skinfoArray.push([response.id,
+                            userName,
+                            null,
+                            false
+                        ]);
+                        var table1 = $("#skinfotable");
+                        var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td></tr>");
+
+                        rowNew.children().eq(0).text(response.id);
+                        rowNew.children().eq(1).text(userName);
+                        rowNew.children().eq(2).text(null);
+                        rowNew.children().eq(3).text(false);
+                        rowNew.children().eq(4).html("<a href=#" + response.id + " >" + " Mac Mapping </a> ")
+                        rowNew.appendTo(table1);
+                    }
+
+                },
+                error: function(msg) {
+                    console.log("Fail")
+                    console.log(msg);
+                }
+            });
+
+        });
+
+
+
+        function requestInfo() {
+            $.ajax({
+                type: 'GET',
+                //                url: "https://0b959718.ngrok.io/users",
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users",
+                dataType: "json",
+                success: function(data) {
+                    
+                    console.log("success");
+                    data.sort(function(a, b) {
+                            return a.id - b.id;
+                        });
+                    for (var i = data.length - 1; i > -1; i--) {
+                        skinfoArray.push([
+                            data[i].id.toString(),
+                            data[i].username,
+                            data[i].lasttime,
+                            data[i].status
+                        ]);
+                    }
+                    showTableFunc();
+
+                },
+                error: function(msg) {
+                    console.log("Fail")
+                    console.log(msg);
+                }
+            });
+
+        }
+
+
+        function showTableFunc() {
+            $("#skinfotable").find("tr:gt(0)").remove();
+            var table1 = $("#skinfotable");
+            $.each(skinfoArray, function(key, value) {
+                var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td></tr>");
+                rowNew.children().eq(0).text(value[0]);
+                rowNew.children().eq(1).text(value[1]);
+                rowNew.children().eq(2).text(value[2]);
+                rowNew.children().eq(3).text(value[3]);
+                rowNew.children().eq(4).html("<a href=#" + value[0] + " >" + " Mac Mapping </a> ")
+                rowNew.appendTo(table1);
+            });
+        }
+
+
+
+
+        $("#showTable").click(function(event) {
+            if (skinfoArray != null) {
+                $("#skinfotable").find("tr:gt(0)").remove();
+                var table1 = $("#skinfotable");
+                $.each(skinfoArray, function(key, value) {
+                    var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td></tr>");
+                    rowNew.children().eq(0).text(value[0]);
+                    rowNew.children().eq(1).text(value[1]);
+                    rowNew.children().eq(2).text(value[2]);
+                    rowNew.children().eq(3).text(value[3]);
+                    rowNew.children().eq(4).html("<a href=#" + value[0] + " >" + " Mac Mapping </a> ")
+                    rowNew.appendTo(table1);
+                });
+            }
+            //$("#tablediv").show();
+            $("#tablediv").slideToggle('slow');
+        });
+        
+        
+    </script>
+</body>
+
+</html>

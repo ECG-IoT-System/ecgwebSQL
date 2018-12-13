@@ -1,0 +1,600 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
+    <script type="text/javascript" src="js/flot/jshashtable-2.1.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.number formatter-1.2.3.min.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.symbol.js"></script>
+    <script type="text/javascript" src="js/flot/jquery.flot.axislabels.js"></script>
+    <script type="text/javascript" src="js/jquery.ba-hashchange.js"></script>
+    <script type="text/javascript" src="js/math/math.js"></script>
+
+    <link rel="stylesheet" type='text/css' media='all' href="css/demo12lead.css">
+
+
+</head>
+
+<body>
+
+    <ul>
+        <li class="bar2"><a href="index.html">Home</a></li>
+        <li class="bar2"><a href="demo3lead.html">Wireless 3-lead ECG </a></li>
+        <li class="bar2"><a class="active" href="demo12lead.html">Synthesized 12-lead ECG </a></li>
+        <li class="bar2"><a href="control.html">Control page </a></li>
+    </ul>
+
+    <button class="button" id="showTable">Show Table</button>
+    <button class="button2" id="showData">Show 12 lead Data</button>
+    <button class="button2" id="showDataFromNow">Show 12 lead Data From Now</button>
+
+
+
+
+    <div id="tablediv">
+        <table class="infotable" cellspacing="0" id="skinfotable">
+            <tr>
+                <th scope="col">id</th>
+                <th scope="col">username</th>
+                <th scope="col">lasttime12</th>
+                <th scope="col">lasttimeOri</th>
+                <th scope="col">status</th>
+                <th scope="col">Select </th>
+            </tr>
+        </table>
+    </div>
+
+    <p id="showUserName"> </p>
+
+    <!--
+    <div class="select">
+        <select name="sqlNameSelect" id="sqlNameSelect"> </select>
+    </div>
+-->
+
+    <p>Lead L1</p>
+    <div id="flot-placeholderL1"></div>
+    <p>Lead L2</p>
+    <div id="flot-placeholderL2"></div>
+    <p>Lead L3</p>
+    <div id="flot-placeholderL3"></div>
+    <p>Lead aVR</p>
+    <div id="flot-placeholderaVR"></div>
+    <p>Lead aVL</p>
+    <div id="flot-placeholderaVL"></div>
+    <p>Lead aVF</p>
+    <div id="flot-placeholderaVF"></div>
+    <p>Lead V1</p>
+    <div id="flot-placeholderV1"></div>
+    <p>Lead V2</p>
+    <div id="flot-placeholderV2"></div>
+    <p>Lead V3</p>
+    <div id="flot-placeholderV3"></div>
+    <p>Lead V4</p>
+    <div id="flot-placeholderV4"></div>
+    <p>Lead V5</p>
+    <div id="flot-placeholderV5"></div>
+    <p>Lead V6</p>
+    <div id="flot-placeholderV6"></div>
+
+    <script type="text/javascript">
+        var selectSQLName;
+        var coeffArray = new Array();
+
+        var displayDataL1 = new Array();
+        var displayDataL2 = new Array();
+        var displayDataL3 = new Array();
+        var displayDataAVR = new Array();
+        var displayDataAVL = new Array();
+        var displayDataAVF = new Array();
+        var displayDataV1 = new Array();
+        var displayDataV2 = new Array();
+        var displayDataV3 = new Array();
+        var displayDataV4 = new Array();
+        var displayDataV5 = new Array();
+        var displayDataV6 = new Array();
+
+
+        var NewestID = 0.0;
+        var LastNewestID = 0.0;
+        var requestCount = 0;
+        var startCount = 7;
+        var obj_count = 0;
+
+        var startTime = 0;
+        var xTimeStart = 0;
+        var xTimeEnd = 0;
+        var TimeOut = 100;
+        var emptyRequestCount = 0;
+        var count_Array = new Array();
+        var delayTimeFromNow = 10000;
+        var skinfoArray = new Array();
+        var username = "";
+        var userId = "";
+
+
+        $(function() {
+
+            // Bind the event.
+            $(window).hashchange(hashchanged);
+
+            // Trigger the event (useful on page load).
+            hashchanged();
+
+        });
+
+        function hashchanged() {
+            var hashAnchor = location.hash.replace(/^#/, '');
+            console.log(hashAnchor)
+            if (hashAnchor) {
+
+                $("#showUserName").text("Show : " + hashAnchor);
+                //            alert("Select : " + userId);
+                userId = hashAnchor
+
+
+            } else {
+                searchUserID = "";
+                $("#showUserName").text("Show : ");
+
+            }
+
+        }
+
+
+        function request() {
+            console.log("request", "NewestID =", NewestID);
+            $.ajaxSetup({
+                cache: false
+            });
+            $.ajax({
+
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/" + userId + "/ecgdata12?&to=" + (NewestID + 1000).toString() + "&from=" + NewestID.toString(),
+                dataType: 'json',
+                success: ECGPlot,
+                error: function(msg) {
+                    console.log("request Fail")
+                    console.log(msg);
+                }
+            });
+        }
+
+
+
+        function ECGPlot(jsonObj) {
+            if (jsonObj == "") {
+                console.log("empty");
+                console.log("NewestID =", NewestID);
+                emptyRequestCount = emptyRequestCount + 1;
+                if (emptyRequestCount > 10) {
+                    NewestID = NewestID + 1000;
+                }
+                setTimeout(request, TimeOut);
+            } else if (LastNewestID == 0 && NewestID == 0) {
+                LastNewestID = NewestID;
+                NewestID = jsonObj[0].timestamp;
+                startTime = jsonObj[0].timestamp;
+                console.log("NewestID =", NewestID);
+                console.log("FirstStartTime=", NewestID)
+                setTimeout(request, TimeOut);
+            } else {
+                emptyRequestCount = 0;
+                obj_count = 0;
+                for (var i = 0; i < jsonObj.length; i++) {
+                    displayDataL1.push([jsonObj[i].timestamp, jsonObj[i].L1]);
+                    displayDataL2.push([jsonObj[i].timestamp, jsonObj[i].L2]);
+                    displayDataL3.push([jsonObj[i].timestamp, jsonObj[i].L3]);
+                    displayDataAVR.push([jsonObj[i].timestamp, jsonObj[i].aVR]);
+                    displayDataAVL.push([jsonObj[i].timestamp, jsonObj[i].aVL]);
+                    displayDataAVF.push([jsonObj[i].timestamp, jsonObj[i].aVF]);
+                    displayDataV1.push([jsonObj[i].timestamp, jsonObj[i].V1]);
+                    displayDataV2.push([jsonObj[i].timestamp, jsonObj[i].V2]);
+                    displayDataV3.push([jsonObj[i].timestamp, jsonObj[i].V3]);
+                    displayDataV4.push([jsonObj[i].timestamp, jsonObj[i].V4]);
+                    displayDataV5.push([jsonObj[i].timestamp, jsonObj[i].V5]);
+                    displayDataV6.push([jsonObj[i].timestamp, jsonObj[i].V6]);
+
+                }
+
+                count_Array.push(jsonObj.length);
+                //   console.log(displayDataV3);
+
+                LastNewestID = NewestID;
+                NewestID = NewestID + 1000;
+                requestCount = requestCount + 1;
+
+                console.log("requestCount = ", requestCount);
+                console.log("LastNewestID =", LastNewestID);
+                console.log("NewestID =", NewestID);
+                console.log("jsonObjLeng = ", jsonObj.length);
+
+                if (requestCount > startCount) {
+
+                    if (requestCount == startCount + 1) {
+                        console.log("xStart = ", xTimeStart);
+                        console.log("xTimeEnd = ", xTimeEnd);
+                        xTimeStart = startTime;
+                        xTimeEnd = NewestID;
+                    } else {
+                        for (var i = 0; i < count_Array[0]; i++) {
+                            displayDataL1.shift();
+                            displayDataL2.shift();
+                            displayDataL3.shift();
+                            displayDataAVR.shift();
+                            displayDataAVL.shift();
+                            displayDataAVF.shift();
+                            displayDataV1.shift();
+                            displayDataV2.shift();
+                            displayDataV3.shift();
+                            displayDataV4.shift();
+                            displayDataV5.shift();
+                            displayDataV6.shift();
+                        }
+
+                        count_Array.shift();
+
+                        xTimeStart = xTimeStart + 1000;
+                        xTimeEnd = xTimeEnd + 1000;
+                        console.log("xStart = ", xTimeStart);
+                        console.log("xTimeEnd = ", xTimeEnd);
+                    }
+                } else {
+                    xTimeStart = startTime;
+                    xTimeEnd = startTime + 6000;
+                }
+                plotECG(xTimeStart, xTimeEnd);
+                setTimeout(request, TimeOut);
+            }
+        }
+
+        function plotECG(xTimeStart, xTimeEnd) {
+
+            var datasetL1 = [{
+                label: "ECG_L1",
+                data: displayDataL1
+            }];
+            var datasetL2 = [{
+                label: "ECG_L2",
+                data: displayDataL2
+            }];
+            var datasetL3 = [{
+                label: "ECG_L3",
+                data: displayDataL3
+            }];
+            var datasetaVR = [{
+                label: "ECG_aVR",
+                data: displayDataAVR
+            }];
+            var datasetaVL = [{
+                label: "ECG_aVL",
+                data: displayDataAVL
+            }];
+            var datasetaVF = [{
+                label: "ECG_aVF",
+                data: displayDataAVF
+            }];
+            var datasetV1 = [{
+                label: "ECG_V1",
+                data: displayDataV1
+            }];
+            var datasetV2 = [{
+                label: "ECG_V2",
+                data: displayDataV2
+            }];
+            var datasetV3 = [{
+                label: "ECG_V3",
+                data: displayDataV3
+            }];
+            var datasetV4 = [{
+                label: "ECG_V4",
+                data: displayDataV4
+            }];
+            var datasetV5 = [{
+                label: "ECG_V5",
+                data: displayDataV5
+            }];
+            var datasetV6 = [{
+                label: "ECG_V6",
+                data: displayDataV6
+            }];
+            var options = {
+
+                grid: {
+                    borderWidth: 5,
+                    borderColor: "#ff8080",
+                    backgroundColor: "#ffffff",
+                    tickColor: "#ff8080",
+                    axisMargin: 3
+                },
+                series: {
+                    lines: {
+                        show: true
+                    },
+                    points: {
+                        radius: 0,
+                        show: true
+                    }
+                },
+                yaxis: {
+                    tickSize: 0.1,
+                    max: 2,
+                    min: -2,
+                    //max: displayDataL1[0][1],
+                    //min: displayDataL1[displayDataL1.length-1][1],
+                    axisLabel: "mV",
+                    axisLabelUseCanvas: true,
+                    axisLabelFontSizePixels: 12,
+                    axisLabelFontFamily: 'Verdana, Arial',
+                    axisLabelPadding: 10
+                },
+
+                xaxis: {
+                    //mode: "time",
+                    //tickSize : 1000,
+                    tickSize: 40,
+                    //minTickSize: [0.04,"second"],
+                    min: xTimeStart,
+                    max: xTimeEnd,
+
+                    tickFormatter: function(v, axis) { /////// formatter code do not work
+                        var date = new Date(v);
+                        //console.log("date","date =",date);
+                        if (date.getSeconds() % 1 + date.getMilliseconds() % 500 == 0) {
+                            showFlag = true;
+
+                            //console.log("date","date =",date);
+                            var hours = date.getHours();
+                            hours = hours < 10 ? "0" + hours : hours;
+                            var minutes = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+                            var seconds = date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+                            var milliseconds = date.getMilliseconds() < 10 ? "0" + date.getMilliseconds() : date.getMilliseconds();
+                            var aa = hours + ":" + minutes + ":" + seconds + ":" + milliseconds;
+                            //console.log(aa);
+                            return aa
+                            //return val.toFixed(axis.tickDecimals);
+
+                        } else {
+                            return "";
+                        }
+                    },
+                    font: { ///// set label text to white
+                        //size: 1,
+                        //  style: "italic",
+                        // family: "sans-serif",
+                        color: "#000000"
+                    },
+                    axisLabel: "Time",
+                    axisLabelUseCanvas: true,
+                    axisLabelFontSizePixels: 12,
+                    axisLabelFontFamily: 'Verdana, Arial',
+                    axisLabelPadding: 10
+                },
+                legend: {
+                    show: false
+                },
+                colors: ["#000000"],
+
+            };
+            $.plot($("#flot-placeholderL1"), datasetL1, options);
+            $.plot($("#flot-placeholderL2"), datasetL2, options);
+            $.plot($("#flot-placeholderL3"), datasetL3, options);
+            $.plot($("#flot-placeholderaVR"), datasetaVR, options);
+            $.plot($("#flot-placeholderaVL"), datasetaVL, options);
+            $.plot($("#flot-placeholderaVF"), datasetaVF, options);
+            $.plot($("#flot-placeholderV1"), datasetV1, options);
+            $.plot($("#flot-placeholderV2"), datasetV2, options);
+            $.plot($("#flot-placeholderV3"), datasetV3, options);
+            $.plot($("#flot-placeholderV4"), datasetV4, options);
+            $.plot($("#flot-placeholderV5"), datasetV5, options);
+            $.plot($("#flot-placeholderV6"), datasetV6, options);
+
+        }
+
+
+
+
+        function showInfo(jsonObj) {
+            //for(var i=0 ; i<jsonObj.length ; i++)
+            for (var i = jsonObj.length - 1; i > -1; i--) {
+                skinfoArray.push([jsonObj[i].id,
+                    jsonObj[i].username,
+                    translateTime(jsonObj[i].lasttime_12L),
+                    jsonObj[i].lasttime_12L,
+
+                    jsonObj[i].status
+                ]);
+
+            }
+            if (skinfoArray != null) {
+                $("#skinfotable").find("tr:gt(0)").remove();
+                var table1 = $("#skinfotable");
+                $.each(skinfoArray, function(key, value) {
+                    var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>");
+                    rowNew.children().eq(0).text(value[0]);
+                    rowNew.children().eq(1).text(value[1]);
+                    rowNew.children().eq(2).text(value[2]);
+                    rowNew.children().eq(3).text(value[3]);
+                    rowNew.children().eq(4).text(value[4]);
+                    rowNew.children().eq(5).html("<a href=#" + value[0] + " >" + " Select Show id </a> ")
+                    rowNew.appendTo(table1);
+                });
+            }
+
+        }
+
+        function translateTime(timeMilli) {
+
+            //console.log(typeof(timeMilli));
+
+            var date = new Date(timeMilli);
+            var hours = date.getHours();
+            hours = hours < 10 ? "0" + hours : hours;
+            var minutes = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+            var seconds = date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+            var milliseconds = date.getMilliseconds() < 10 ? "0" + date.getMilliseconds() : date.getMilliseconds();
+            //            console.log(hours)
+            //            console.log(minutes)
+            //            console.log(seconds)
+
+            var aa = hours + ":" + minutes + ":" + seconds + ":" + milliseconds;
+            //console.log(aa);
+            return aa;
+
+
+        }
+
+
+
+        function initialize() {
+
+            displayDataL1.length = 0;
+            displayDataL2.length = 0;
+            displayDataL3.length = 0;
+            displayDataAVR.length = 0;
+            displayDataAVL.length = 0;
+            displayDataAVF.length = 0;
+            displayDataV1.length = 0;
+            displayDataV2.length = 0;
+            displayDataV3.length = 0;
+            displayDataV4.length = 0;
+            displayDataV5.length = 0;
+            displayDataV6.length = 0;
+
+
+            NewestID = 0.0;
+            LastNewestID = 0.0;
+            requestCount = 0;
+            startCount = 7;
+            obj_count = 0;
+
+            startTime = 0;
+            xTimeStart = 0;
+            xTimeEnd = 0;
+            emptyRequestCount = 0;
+            count_Array.length = 0;
+        }
+
+
+        $(document).ready(function() {
+            // $("#tablediv").hide();
+            $(requestInfo);
+            //$(requestTest);
+
+        });
+
+        function requestMinTime() {
+            // HTTP GET /ecgdata/:id?from=1512131231&limit=1024
+            // https://node-server-dot-ecgproject-1069.appspot.com/ecgdata/5bf29f1a7ee18712ee005806?from=1542641809030&limit=1024
+
+            console.log("request", "NewestID =", NewestID);
+            $.ajaxSetup({
+                cache: false
+            });
+            $.ajax({
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/" + userId + "/ecgdata12?limit=1024&from=0",
+                dataType: 'json',
+                success: ECGPlot,
+                //                success: function(jsonData) {
+                //                    ECGPlot(jsonData);
+                //                },
+                error: function(msg) {
+                    console.log("requestMinTime Fail")
+                    console.log(msg);
+                }
+
+            });
+
+
+        }
+
+        function requestInfo() {
+            $.ajax({
+                type: 'GET',
+
+
+                //            url :"https://0b959718.ngrok.io/users",
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users",
+                dataType: "json",
+                success: function(data) {
+                    console.log("success");
+                    //console.log(data);
+
+                    data.sort(function(a, b) {
+                        return a.lasttime_12L - b.lasttime_12L;
+                    });
+                    showInfo(data);
+                    username = skinfoArray[0][1];
+                    userId = skinfoArray[0][0];
+                    console.log("username is " + username);
+                    console.log("userId is " + userId);
+                },
+                error: function(msg) {
+                    console.log("Fail")
+                    console.log(msg);
+                }
+            });
+
+        }
+
+        $("#showTable").click(function(event) {
+            if (skinfoArray != null) {
+                $("#skinfotable").find("tr:gt(0)").remove();
+                var table1 = $("#skinfotable");
+                $.each(skinfoArray, function(key, value) {
+                    var rowNew = $("<tr><td></td><td></td><td></td><td></td><td></td></tr>");
+                    rowNew.children().eq(0).text(value[0]);
+                    rowNew.children().eq(1).text(value[1]);
+                    rowNew.children().eq(2).text(value[2]);
+                    rowNew.children().eq(3).text(value[3]);
+                    rowNew.children().eq(4).html("<a href=#" + value[0] + " >" + " Select Show id </a> ")
+                    rowNew.appendTo(table1);
+                });
+            }
+            //$("#tablediv").show();
+            $("#tablediv").slideToggle('slow');
+        });
+
+
+
+
+
+        $("#showData").click(function(event) {
+            initialize()
+            $(requestMinTime);
+
+        });
+
+
+        $("#showDataFromNow").click(function(event) {
+            initialize();
+            var timeInMs = Date.now();
+            console.log(timeInMs);
+            //            startTime = timeInMs - delayTimeFromNow;
+            //            NewestID = timeInMs - delayTimeFromNow;
+            $.ajax({
+                type: 'GET',
+
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/" + userId,
+                dataType: "json",
+                success: function(data) {
+                    console.log("success");
+                    console.log(data);
+                    startTime = data.lasttime_12L - delayTimeFromNow;
+                    NewestID = data.lasttime_12L - delayTimeFromNow;
+
+                },
+                error: function(msg) {
+                    console.log("Fail")
+                    console.log(msg);
+                }
+            });
+
+            $(request);
+        });
+    </script>
+</body>
+
+</html>
