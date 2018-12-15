@@ -46,7 +46,7 @@
         </table>
     </div>
 
-<!--
+    <!--
     <div class="select">
         <select name="sqlNameSelect" id="sqlNameSelect"> </select>
     </div>
@@ -54,11 +54,11 @@
 
 
     <div id="myDIV">
-        <p id="aftext"> -------------- AF -------------- </p>
+        <p id="aftext">  </p>
     </div>
-    
-     <p id="showUserName"> </p>
-    
+
+    <p id="showUserName"> </p>
+
     <p id="lead1Count">Lead A</p>
     <div id="flot-placeholder0"></div>
 
@@ -90,6 +90,7 @@
         var startTime = 0;
         var xTimeStart = 0;
         var xTimeEnd = 0;
+        var initTimeOut = 1000;
         var TimeOut = 1000;
         var emptyRequestCount = 0;
         var data0 = new Array();
@@ -126,8 +127,8 @@
         const EMG_filter = [-0.000217244399268074, -0.00227268755266697, -0.00556192781130237, -0.00768182716974894, -0.00594427251433773, -0.000218544510481882, 0.00589479189737367, 0.00746075207558138, 0.00268295980250158, -0.00471307278403146, -0.00813146163412527, -0.00407025676714511, 0.00410095497645106, 0.00871702380077503, 0.00499560667306845, -0.00391448363116554, -0.00940759624830857, -0.00568839115556869, 0.00407668978961913, 0.0102756009823772, 0.00624846753487270, -0.00456225151905075, -0.0113700258649080, -0.00672302654049656, 0.00538606017829096, 0.0127479315654145, 0.00713505755671852, -0.00660399965693981, -0.0144954371370519, -0.00749549401843271, 0.00832798039523301, 0.0167564067541130, 0.00780896735040049, -0.0107652980436381, -0.0197887881772295, -0.00807676835368048, 0.0143140929416751, 0.0240970469465565, 0.00829847898373536, -0.0198189097679077, -0.0308021265994088, -0.00847292319064690, 0.0294043337434289, 0.0429622960869577, 0.00859874441754916, -0.0503125790625605, -0.0728374844324769, -0.00867476322769235, 0.133283544857603, 0.279910866771456, 0.342033527555155, 0.279910866771456, 0.133283544857603, -0.00867476322769235, -0.0728374844324769, -0.0503125790625605, 0.00859874441754916, 0.0429622960869577, 0.0294043337434289, -0.00847292319064690, -0.0308021265994088, -0.0198189097679077, 0.00829847898373536, 0.0240970469465565, 0.0143140929416751, -0.00807676835368048, -0.0197887881772295, -0.0107652980436381, 0.00780896735040049, 0.0167564067541130, 0.00832798039523301, -0.00749549401843271, -0.0144954371370519, -0.00660399965693981, 0.00713505755671852, 0.0127479315654145, 0.00538606017829096, -0.00672302654049656, -0.0113700258649080, -0.00456225151905075, 0.00624846753487270, 0.0102756009823772, 0.00407668978961913, -0.00568839115556869, -0.00940759624830857, -0.00391448363116554, 0.00499560667306845, 0.00871702380077503, 0.00410095497645106, -0.00407025676714511, -0.00813146163412527, -0.00471307278403146, 0.00268295980250158, 0.00746075207558138, 0.00589479189737367, -0.000218544510481882, -0.00594427251433773, -0.00768182716974894, -0.00556192781130237, -0.00227268755266697, -0.000217244399268074];
 
 
-        
-        
+
+
         $(function() {
 
             // Bind the event.
@@ -138,27 +139,28 @@
 
         });
 
+
+
         function hashchanged() {
             var hashAnchor = location.hash.replace(/^#/, '');
-            console.log(hashAnchor)
-            if(hashAnchor){
-                
-            $("#showUserName").text("Show : " + hashAnchor );
-//            alert("Select : " + userId);
+            //console.log(hashAnchor)
+            if (hashAnchor) {
+
+                $("#showUserName").text("Show : " + hashAnchor);
+                //            alert("Select : " + userId);
                 console.log(hashAnchor)
-            userId = hashAnchor
-            getPadID(userId);
-                
-                
-            }
-            else{
+                userId = hashAnchor
+                getPadID(userId);
+
+
+            } else {
                 searchUserID = "";
-                 $("#showUserName").text("Show : ");
-                
+                $("#showUserName").text("Show : ");
+
             }
-            
+
         }
-        
+
         //發請求
         function mean(signal) {
             var sum = 0;
@@ -214,7 +216,7 @@
                     NewestID = NewestID + 1000;
                 }
                 setTimeout(request, TimeOut);
-            } else if (LastNewestID == 0 ) {
+            } else if (LastNewestID == 0) {
 
                 jsonObj.sort(function(a, b) {
                     return a.timestamp - b.timestamp;
@@ -259,9 +261,9 @@
 
                 for (var i = 0; i < jsonObj.length; i++) {
                     console.log(jsonObj[i].afstat)
-                    if(jsonObj[i].afstat == true) {
-                    	afDetector = 1
-                    	console.log("AF!!!!!!!!!!!!!!!!!")
+                    if (jsonObj[i].afstat == true) {
+                        afDetector = 1
+                        console.log("AF!!!!!!!!!!!!!!!!!")
                     }
 
                     switch (jsonObj[i].device_id) {
@@ -338,53 +340,75 @@
                 setTimeout(request, TimeOut);
             }
         }
-        
-        function setUpTimeOut(){
-            
-         $.ajax({
-                type: 'GET',
 
-                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/"+ userId,
-                dataType: "json",
-                success: function(data) {
-                    console.log("success");
-                    //console.log(data);
-                    if ( data.lasttime - NewestID < 3000 ){
+        function setUpTimeOut() {
+
+           
+            
+            $.ajax({
+                    type: 'GET',
+
+
+                    //            url :"https://0b959718.ngrok.io/users",
+                    url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users",
+                    dataType: "json",
+                    success: function(data) {
+
+                        data.sort(function(a, b) {
+                            return b.lasttime - a.lasttime;
+                        });
+
+
+
+
+
+                        skinfoArray.length = 0;
+
+                        for (var rowId = 0; rowId < data.length; rowId++) {
+
+                            skinfoArray.push([data[rowId].id,
+                                data[rowId].username,
+                                translateTime(data[rowId].lasttime),
+                                data[rowId].lasttime,
+                                data[rowId].status
+                            ]);
+                        
+
+                        $("#skinfotable").children().children()[rowId + 1].children[0].innerHTML = data[rowId].id;
+                        $("#skinfotable").children().children()[rowId + 1].children[1].innerHTML = data[rowId].username;
+                        $("#skinfotable").children().children()[rowId + 1].children[2].innerHTML = translateTime(data[rowId].lasttime);
+                        $("#skinfotable").children().children()[rowId + 1].children[3].innerHTML = data[rowId].lasttime;
+                        $("#skinfotable").children().children()[rowId + 1].children[4].innerHTML = data[rowId].status;
+                        $("#skinfotable").children().children()[rowId + 1].children[5].innerHTML = "<a href=#" + data[rowId].id + " >" + " Select Show id </a> ";
+
+                    
+                    if (data[rowId].id == userId )  {
+                        
+                        if (data.lasttime - NewestID < 3000) {
                         TimeOut = 3000;
                         console.log("Set timeout = 3000 to wait for data")
-                    } 
+                        }
+                        else{
+                        TimeOut = initTimeOut;
+                        }
                     
-                    
-//                    
-//                    for (var i = data.length - 1; i > -1; i--) {
-//
-//                         $('#skinfotable').find('tr#'+rowId).find('td:eq(colNum)').html(newValue);
-//                         $('#skinfotable').find('tr#'+rowId).find('td:eq(colNum)').html(newValue);
-//                         $('#skinfotable').find('tr#'+rowId).find('td:eq(colNum)').html(newValue);
-//                         $('#skinfotable').find('tr#'+rowId).find('td:eq(colNum)').html(newValue);
-//                         $('#skinfotable').find('tr#'+rowId).find('td:eq(colNum)').html(newValue);
-//                        
-//                    data[i].id,
-//                    data[i].username,
-//                    translateTime(data[i].lasttime),
-//                    data[i].lasttime,
-//                    data[i].status
-//            
-//            }
-//                    
-//                   
-                    
-                    
-                    
+                    }     
+                        
+                }
+
+                    console.log("update time and request timeout")
                 },
+
                 error: function(msg) {
                     console.log("Fail")
                     console.log(msg);
-                    TimeOut = 1000;
                 }
             });
+            
+        //setTimeout(setUpTimeOut, 3000);
+
         }
-        
+
 
         function filtering(rawData) {
 
@@ -421,8 +445,8 @@
                 },
                 yaxis: {
                     tickSize: 0.1,
-                    max: 2,
-                    min: -2,
+                    max: 0.5,
+                    min: -0.5,
                     //max: data0[0][1],
                     //min: data0[data0.length-1][1],
                     axisLabel: "mV",
@@ -488,17 +512,21 @@
 
         function showAF() {
             if (afButton == true && afDetector == 1) {
-                console.log("AF !!!! red")
+                $("#aftext").text("-------------- AF --------------");
                 $("#aftext").css("color", "red");
+                console.log("AF !!!! red")
             } else if (afButton == true && afDetector == 0) {
-                console.log("No AF white")
-                $("#aftext").css("color", "white");
+                $("#aftext").text("-------------- No AF --------------");
+                $("#aftext").css("color", "black");
+                console.log("No AF ")
             } else if (afButton == false && afDetector == 1) {
+                $("#aftext").text("--------------  AF --------------");
+                $("#aftext").css("color", "white");
                 console.log("AF !!!! white")
-                $("#aftext").css("color", "white");
             } else {
-                console.log("white")
+                $("#aftext").text("-------------- No AF --------------");
                 $("#aftext").css("color", "white");
+                console.log("white")
             }
         }
 
@@ -512,24 +540,25 @@
                 url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users",
                 dataType: "json",
                 success: function(data) {
-                    
+
                     data.sort(function(a, b) {
-                            return a.lasttime - b.lasttime;
-                     });
-                        
+                        return a.lasttime - b.lasttime;
+                    });
+
                     console.log("success");
                     //console.log(data);
                     showInfo(data);
-                    
-                    username = skinfoArray[0][1];
-                    userId = skinfoArray[0][0];
-                   // console.log("skinfoArray[0][0]",skinfoArray[0][0]);
-                    getPadID(userId);
+
+                   // username = skinfoArray[0][1];
+                //    userId = skinfoArray[0][0];
+                    // console.log("skinfoArray[0][0]",skinfoArray[0][0]);
+                  //  getPadID(userId);
                     console.log("username is " + username);
                     console.log("userId is " + userId);
-                    $("#showUserName").text("Show : " + userId );
+                    $("#showUserName").text("Show : " + userId);
+
                 },
-                
+
                 error: function(msg) {
                     console.log("Fail")
                     console.log(msg);
@@ -537,6 +566,8 @@
             });
 
         }
+
+       
 
         function translateTime(timeMilli) {
 
@@ -549,7 +580,7 @@
             var seconds = date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
             var milliseconds = date.getMilliseconds() < 10 ? "0" + date.getMilliseconds() : date.getMilliseconds();
 
-            
+
             var aa = hours + ":" + minutes + ":" + seconds + ":" + milliseconds;
             //console.log(aa);
             return aa;
@@ -568,16 +599,14 @@
                     data[i].status
                 ]);
             }
-//            $(addOption);
             showTabel();
 
         }
 
-        
-        function showTabel()
-        {
-        
-        if (skinfoArray != null) {
+
+        function showTabel() {
+
+            if (skinfoArray != null) {
                 $("#skinfotable").find("tr:gt(0)").remove();
                 var table1 = $("#skinfotable");
                 $.each(skinfoArray, function(key, value) {
@@ -591,26 +620,10 @@
                     rowNew.appendTo(table1);
                 });
             }
-            //$("#tablediv").show();
-            //$("#tablediv").slideToggle('slow');
-            
+
         }
-       
-//        function addOption() {
-//            if (skinfoArray != null) {
-//                for (i = 0; i < skinfoArray.length; i++) {
-//
-//                    //$("#sqlNameSelect").append($("<option></option>").attr("value",skinfoArray[i][0]).text(skinfoArray[i][1]));
-//
-//                    $("#sqlNameSelect").append($('<option>', {
-//                        value: skinfoArray[i][0],
-//                        text: skinfoArray[i][1],
-//                    }));
-//
-//                }
-//
-//            }
-//        }
+
+
 
 
 
@@ -687,10 +700,10 @@
 
 
         $(document).ready(function() {
-//            $("#tablediv").hide();
+            //            $("#tablediv").hide();
             $(requestInfo);
             //$(requestTest);
-            
+
 
         });
 
@@ -730,15 +743,7 @@
 
         });
 
-//        $("#sqlNameSelect").change(function() {
-//            username = $("#sqlNameSelect").find(":selected").text();
-//            userId = $("#sqlNameSelect").find(":selected").val();
-//            console.log("username is " + username);
-//            console.log("userId is " + userId);
-//            alert("Select : " + userId);
-//            getPadID(userId);
-//
-//        });
+
 
 
         function getPadID(userId) {
@@ -748,7 +753,7 @@
                 dataType: "json",
                 success: function(response) {
                     console.log("success");
-                   // console.log(response);
+                    // console.log(response);
                     if (response.length > 0) {
                         response.sort(function(a, b) {
                             return a.device_id - b.device_id;
@@ -810,19 +815,19 @@
         $("#ShowWirelessData_Now").click(function(event) {
             initialize();
             var timeInMs = Date.now();
-           
-//            startTime = timeInMs - delayTimeFromNow;
-//            NewestID = timeInMs - delayTimeFromNow;
+
+            //            startTime = timeInMs - delayTimeFromNow;
+            //            NewestID = timeInMs - delayTimeFromNow;
             $.ajax({
                 type: 'GET',
 
-                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/"+ userId,
+                url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users/" + userId,
                 dataType: "json",
                 success: function(data) {
                     console.log("success");
                     console.log(data);
-                    startTime = data.lasttime-delayTimeFromNow;
-                    NewestID = data.lasttime-delayTimeFromNow;
+                    startTime = data.lasttime - delayTimeFromNow;
+                    NewestID = data.lasttime - delayTimeFromNow;
                     console.log(NewestID);
                     $(requestMinTime);
                 },
@@ -831,9 +836,9 @@
                     console.log(msg);
                 }
             });
-            
-            
-            
+
+
+
         });
     </script>
 </body>

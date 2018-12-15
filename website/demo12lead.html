@@ -107,12 +107,12 @@
         var startTime = 0;
         var xTimeStart = 0;
         var xTimeEnd = 0;
-        var TimeOut = 100;
+        var TimeOut = 1000;
+        var initTimeOut = 1000;
         var emptyRequestCount = 0;
         var count_Array = new Array();
         var delayTimeFromNow = 10000;
         var skinfoArray = new Array();
-        var username = "";
         var userId = "";
 
 
@@ -246,6 +246,7 @@
                     xTimeEnd = startTime + 6000;
                 }
                 plotECG(xTimeStart, xTimeEnd);
+                setUpTimeOut()
                 setTimeout(request, TimeOut);
             }
         }
@@ -320,8 +321,8 @@
                 },
                 yaxis: {
                     tickSize: 0.1,
-                    max: 2,
-                    min: -2,
+                    max: 1,
+                    min: -1,
                     //max: displayDataL1[0][1],
                     //min: displayDataL1[displayDataL1.length-1][1],
                     axisLabel: "mV",
@@ -394,7 +395,74 @@
         }
 
 
+         function setUpTimeOut() {
 
+           
+            
+            $.ajax({
+                    type: 'GET',
+
+
+                    //            url :"https://0b959718.ngrok.io/users",
+                    url: "https://nestjs-server-dot-ecgproject-1069.appspot.com/users",
+                    dataType: "json",
+                    success: function(data) {
+
+                        data.sort(function(a, b) {
+                            return b.lasttime - a.lasttime;
+                        });
+
+
+
+
+
+                        skinfoArray.length = 0;
+
+                        for (var rowId = 0; rowId < data.length; rowId++) {
+
+                            skinfoArray.push([data[rowId].id,
+                                data[rowId].username,
+                                translateTime(data[rowId].lasttime),
+                                data[rowId].lasttime,
+                                data[rowId].status
+                            ]);
+                        
+
+                        $("#skinfotable").children().children()[rowId + 1].children[0].innerHTML = data[rowId].id;
+                        $("#skinfotable").children().children()[rowId + 1].children[1].innerHTML = data[rowId].username;
+                        $("#skinfotable").children().children()[rowId + 1].children[2].innerHTML = translateTime(data[rowId].lasttime_12L);
+                        $("#skinfotable").children().children()[rowId + 1].children[3].innerHTML = data[rowId].lasttime_12L;
+                        $("#skinfotable").children().children()[rowId + 1].children[4].innerHTML = data[rowId].status;
+                        $("#skinfotable").children().children()[rowId + 1].children[5].innerHTML = "<a href=#" + data[rowId].id + " >" + " Select Show id </a> ";
+
+                    
+                    if (data[rowId].id == userId )  {
+                        
+                        if (data.lasttime - NewestID < 3000) {
+                        TimeOut = 3000;
+                        console.log("Set timeout = 3000 to wait for data")
+                        }
+                        else{
+                        TimeOut = initTimeOut;
+                        }
+                    
+                    }     
+                        
+                }
+
+                    console.log("update time and request timeout")
+                },
+
+                error: function(msg) {
+                    console.log("Fail")
+                    console.log(msg);
+                }
+            });
+            
+        setTimeout(setUpTimeOut, 3000);
+
+        }
+        
 
         function showInfo(jsonObj) {
             //for(var i=0 ; i<jsonObj.length ; i++)
